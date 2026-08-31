@@ -6,7 +6,8 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isPublicImage = pathname.startsWith("/api/design-images/");
   const isHealthCheck = pathname === "/api/health";
-  if (isPublicImage || isHealthCheck) return response;
+  const isAppManifest = pathname === "/manifest.webmanifest";
+  if (isPublicImage || isHealthCheck || isAppManifest) return response;
 
   const url = process.env.SUPABASE_URL;
   const anonKey = process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY;
