@@ -4,6 +4,7 @@ import { DesignFilters } from "@/components/design-filters";
 import { DesignForm } from "@/components/design-form";
 import { InfiniteDesignGrid } from "@/components/infinite-design-grid";
 import { PageHeader } from "@/components/page-header";
+import { PullToRefresh } from "@/components/pull-to-refresh";
 import { DESIGN_CATEGORIES } from "@/lib/constants";
 import { getClothTypes, getDesigns, getKarigars } from "@/lib/data";
 
@@ -20,10 +21,10 @@ export default async function DesignsPage({ searchParams }: Props) {
   const showKarigar = value(raw.showKarigar) === "yes";
   const [result, karigars, clothTypes] = await Promise.all([getDesigns(filters), getKarigars(), getClothTypes()]);
   const filterKey = `${JSON.stringify({ ...filters, showKarigar })}:${result.designs.map((design) => `${design.id}:${design.updated_at}`).join("|")}`;
-  return <>
+  return <PullToRefresh>
     <PageHeader title="Designs" description={`${result.total.toLocaleString("en-IN")} designs match your current view.`} />
     <CreateDesignModal><DesignForm karigars={karigars} clothTypes={clothTypes} categories={DESIGN_CATEGORIES} /></CreateDesignModal>
     <DesignFilters values={{ ...filters, showKarigar }} categories={DESIGN_CATEGORIES} karigars={karigars} clothTypes={clothTypes} />
     {result.designs.length ? <InfiniteDesignGrid key={filterKey} initialDesigns={result.designs} initialPage={result.page} initialTotalPages={result.totalPages} filters={filters} showKarigar={showKarigar} /> : <div className="empty-state"><Search /><h2>No designs found</h2><p>Try clearing a filter or add a new design.</p></div>}
-  </>;
+  </PullToRefresh>;
 }
