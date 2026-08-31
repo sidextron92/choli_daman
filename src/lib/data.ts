@@ -85,43 +85,81 @@ export async function getRecentDesigns(limit = 6) {
 export async function getDesigns(filters: DesignFilters): Promise<PaginatedDesigns> {
   await requireUser();
   const supabase = createAdminClient();
-  let query = supabase.from("designs_with_karigar").select("*").limit(1000);
+  const page = Math.max(1, filters.page ?? 1);
+  const offset = (page - 1) * DESIGNS_PER_PAGE;
+  const search = filters.q?.trim();
 
+  const [clothFilterResult, searchIds] = await Promise.all([
+    filters.clothType
+      ? supabase.from("design_cloth_types").select("design_id").eq("cloth_type_id", filters.clothType)
+      : Promise.resolve({ data: null, error: null }),
+    search ? findDesignIdsForSearch(search) : Promise.resolve<string[] | null>(null),
+  ]);
+  if (clothFilterResult.error) throw new Error(clothFilterResult.error.message);
+
+  const clothIds = clothFilterResult.data?.map((row) => String(row.design_id)) ?? null;
+  let eligibleIds = searchIds;
+  if (clothIds) {
+    const clothSet = new Set(clothIds);
+    eligibleIds = eligibleIds ? eligibleIds.filter((id) => clothSet.has(id)) : clothIds;
+  }
+  if (eligibleIds && eligibleIds.length === 0) {
+    return { designs: [], page: 1, total: 0, totalPages: 1 };
+  }
+
+  let query = supabase.from("designs_with_karigar").select("*", { count: "exact" });
   if (filters.category) query = query.eq("category", filters.category);
   if (filters.karigarId) query = query.eq("karigar_id", filters.karigarId);
-
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  let designs = (data ?? []).map((row) => normalizeDesign(row));
-
-  if (filters.clothType) {
-    designs = designs.filter((design) =>
-      design.cloth_types.some((cloth) => cloth.cloth_type_id === filters.clothType),
-    );
-  }
-
-  const search = filters.q?.trim().toLocaleLowerCase();
-  if (search) {
-    designs = designs.filter((design) =>
-      [design.category, design.karigar_name ?? "", String(design.sequence_number), ...design.cloth_types.map((c) => c.cloth_type_name)]
-        .some((value) => value.toLocaleLowerCase().includes(search)),
-    );
-  }
+  if (eligibleIds) query = query.in("id", eligibleIds);
 
   const sort = filters.sort ?? "newest";
-  designs.sort((a, b) => {
-    if (sort === "oldest") return +new Date(a.created_at) - +new Date(b.created_at);
-    if (sort === "cost-high") return b.cost - a.cost;
-    if (sort === "cost-low") return a.cost - b.cost;
-    return +new Date(b.created_at) - +new Date(a.created_at);
-  });
+  const sortColumn = sort.startsWith("cost-") ? "cost" : "created_at";
+  const ascending = sort === "oldest" || sort === "cost-low";
+  const { data, error, count } = await query
+    .order(sortColumn, { ascending })
+    .order("id", { ascending })
+    .range(offset, offset + DESIGNS_PER_PAGE - 1);
+  if (error) throw new Error(error.message);
 
-  const page = Math.max(1, filters.page ?? 1);
-  const total = designs.length;
+  const total = count ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / DESIGNS_PER_PAGE));
-  const safePage = Math.min(page, totalPages);
-  const offset = (safePage - 1) * DESIGNS_PER_PAGE;
-  return { designs: designs.slice(offset, offset + DESIGNS_PER_PAGE), page: safePage, total, totalPages };
+  return { designs: (data ?? []).map((row) => normalizeDesign(row)), page, total, totalPages };
+}
+
+async function findDesignIdsForSearch(search: string): Promise<string[]> {
+  const supabase = createAdminClient();
+  const pattern = `%${search.replace(/[\\%_]/g, "\\$&")}%`;
+  const sequenceNumber = Number(search);
+  const [categoryResult, karigarResult, clothResult, sequenceResult] = await Promise.all([
+    supabase.from("designs").select("id").ilike("category", pattern).limit(1000),
+    supabase.from("karigars").select("id").ilike("name", pattern).limit(1000),
+    supabase.from("cloth_types").select("id").ilike("name", pattern).limit(1000),
+    Number.isInteger(sequenceNumber)
+      ? supabase.from("designs").select("id").eq("sequence_number", sequenceNumber)
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+  const firstError = categoryResult.error ?? karigarResult.error ?? clothResult.error ?? sequenceResult.error;
+  if (firstError) throw new Error(firstError.message);
+
+  const karigarIds = karigarResult.data?.map((row) => String(row.id)) ?? [];
+  const clothTypeIds = clothResult.data?.map((row) => String(row.id)) ?? [];
+  const [karigarDesigns, clothDesigns] = await Promise.all([
+    karigarIds.length
+      ? supabase.from("designs").select("id").in("karigar_id", karigarIds).limit(1000)
+      : Promise.resolve({ data: null, error: null }),
+    clothTypeIds.length
+      ? supabase.from("design_cloth_types").select("design_id").in("cloth_type_id", clothTypeIds).limit(1000)
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+  const relationError = karigarDesigns.error ?? clothDesigns.error;
+  if (relationError) throw new Error(relationError.message);
+
+  return [...new Set([
+    ...(categoryResult.data ?? []).map((row) => String(row.id)),
+    ...(sequenceResult.data ?? []).map((row) => String(row.id)),
+    ...(karigarDesigns.data ?? []).map((row) => String(row.id)),
+    ...(clothDesigns.data ?? []).map((row) => String(row.design_id)),
+  ])];
 }
 
 export async function getDesign(id: string) {

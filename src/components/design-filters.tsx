@@ -26,11 +26,11 @@ export function DesignFilters({
   karigars: Karigar[];
 }) {
   const activeFilterCount = [values.category, values.clothType, values.karigarId, values.showKarigar, values.sort && values.sort !== "newest"].filter(Boolean).length;
-  const [expanded, setExpanded] = useState(activeFilterCount > 0);
+  const [expanded, setExpanded] = useState(false);
   const clearHref = values.q ? `/designs?q=${encodeURIComponent(values.q)}` : "/designs";
 
   return (
-    <form className="filter-bar design-filter-bar" method="get">
+    <form className="filter-bar design-filter-bar" method="get" onSubmit={() => setExpanded(false)}>
       <div className="filter-toolbar">
         <div className="search-field">
           <Search size={18} />
@@ -47,7 +47,7 @@ export function DesignFilters({
         <label><span>Karigar</span><select name="karigarId" defaultValue={values.karigarId ?? ""}><option value="">All karigars</option>{karigars.map((karigar) => <option key={karigar.id} value={karigar.id}>{karigar.name}</option>)}</select></label>
         <label><span>Karigar visible</span><select name="showKarigar" defaultValue={values.showKarigar ? "yes" : "no"}><option value="no">No</option><option value="yes">Yes</option></select></label>
         <label><span>Sort by</span><select name="sort" defaultValue={values.sort ?? "newest"}><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="cost-high">Cost: high to low</option><option value="cost-low">Cost: low to high</option></select></label>
-        <div className="filter-actions"><Link className="button ghost small" href={clearHref}><X size={15} /> Clear filters</Link><button className="button primary small" type="submit"><Filter size={15} /> Apply filters</button></div>
+        <div className="filter-actions"><Link className="button ghost small" href={clearHref} onClick={() => setExpanded(false)}><X size={15} /> Clear filters</Link><button className="button primary small" type="submit"><Filter size={15} /> Apply filters</button></div>
       </section>
     </form>
   );
