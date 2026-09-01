@@ -52,6 +52,6 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
       <RefreshCw size={19} />
       <span>{refreshing ? "Refreshing…" : pull >= REFRESH_THRESHOLD ? "Release to refresh" : "Pull to refresh"}</span>
     </div>
-    <div className="pull-refresh-content" style={{ transform: `translateY(${pull}px)` }}>{children}</div>
+    <div className="pull-refresh-content" style={pull > 0 ? { transform: `translateY(${pull}px)` } : undefined}>{children}</div>
   </div>;
 }

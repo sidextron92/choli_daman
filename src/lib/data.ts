@@ -178,13 +178,13 @@ export async function getKarigars(search?: string) {
   const { data, error } = await createAdminClient()
     .from("karigars")
     .select("*")
-    .order("created_at", { ascending: false })
+    .order("name", { ascending: true })
     .limit(1000);
   if (error) throw new Error(error.message);
   let karigars = (data ?? []).map((row) => normalizeKarigar(row));
   const q = search?.trim().toLocaleLowerCase();
   if (q) karigars = karigars.filter((k) => k.name.toLocaleLowerCase().includes(q) || k.mobile_number.includes(q));
-  return karigars;
+  return karigars.sort((left, right) => left.name.localeCompare(right.name, "en-IN", { sensitivity: "base" }));
 }
 
 export async function getKarigar(id: string): Promise<KarigarWithDesigns> {

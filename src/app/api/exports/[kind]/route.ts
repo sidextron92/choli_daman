@@ -36,7 +36,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ kin
   ]);
   if (designResult.error || karigarResult.error) return new Response("Export unavailable", { status: 500 });
   const designs = (designResult.data ?? []).map((row) => normalizeDesign(row));
-  const karigars = karigarResult.data ?? [];
+  const karigars = (karigarResult.data ?? []).sort((left, right) => String(left.name).localeCompare(String(right.name), "en-IN", { sensitivity: "base" }));
   let rows: Record<string, unknown>[];
 
   if (kind === "designs") {

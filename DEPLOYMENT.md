@@ -10,6 +10,7 @@ Configure these as **Sensitive** environment variables in Vercel:
 - `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`
+- `IMAGEKIT_PRIVATE_KEY`
 
 Generate the Server Action encryption key independently from the Supabase secret:
 
