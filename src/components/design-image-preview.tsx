@@ -101,8 +101,11 @@ export function DesignImagePreview({ id, imageUrl, name, eager = false, unoptimi
       </div>
       <div ref={viewportRef} className="design-preview-viewport" onTouchStart={startPinch} onTouchMove={movePinch} onTouchEnd={endPinch} onTouchCancel={endPinch}>
         <div className="design-preview-canvas" style={{ width: `${zoom * 100}%`, height: `${zoom * 100}%` }}>
-          <Image className="preview-thumbnail" src={thumbnailSource} alt="" fill sizes="480px" unoptimized aria-hidden="true" onError={() => setThumbnailFailed(true)} />
-          {previewOpen ? <Image className={`preview-full-image ${fullImageLoaded ? "loaded" : ""}`} src={`/api/design-images/${id}`} alt={name} fill sizes="100vw" unoptimized={unoptimized} onLoad={() => setFullImageLoaded(true)} /> : null}
+          {!fullImageLoaded ? <div className="preview-loading-backdrop" aria-hidden="true">
+            <Image className="preview-thumbnail" src={thumbnailSource} alt="" fill sizes="480px" unoptimized onError={() => setThumbnailFailed(true)} />
+            <span className="preview-loading-shimmer" />
+          </div> : null}
+          {previewOpen ? <Image className="preview-full-image" src={`/api/design-images/${id}`} alt={name} fill sizes="100vw" unoptimized={unoptimized} onLoad={() => setFullImageLoaded(true)} /> : null}
         </div>
       </div>
     </dialog>
