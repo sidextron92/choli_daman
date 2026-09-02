@@ -8,7 +8,7 @@ import type { Design } from "@/lib/types";
 export function DesignCard({ design, editable = true, eager = false, showKarigar = true }: { design: Design; editable?: boolean; eager?: boolean; showKarigar?: boolean }) {
   return <article className="design-card">
     <div className="design-image">
-      <DesignImagePreview id={design.id} name={formatDesignNumber(design)} eager={eager} unoptimized={design.design_type === "OPEN_DESIGN"} />
+      <DesignImagePreview id={design.id} imageUrl={design.image_url} name={formatDesignNumber(design)} eager={eager} unoptimized={design.design_type === "OPEN_DESIGN"} />
       {editable ? <details className="design-actions-menu">
         <summary aria-label={`Actions for ${formatDesignNumber(design)}`} title="Design actions"><MoreVertical size={19} /></summary>
         <div className="design-actions-popover">

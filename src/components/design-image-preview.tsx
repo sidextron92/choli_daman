@@ -3,13 +3,19 @@
 import Image from "next/image";
 import { Minus, Plus, X } from "lucide-react";
 import { useRef, useState, type TouchEvent } from "react";
+import { designThumbnailUrl } from "@/lib/format";
 
-export function DesignImagePreview({ id, name, eager = false, unoptimized = false }: { id: string; name: string; eager?: boolean; unoptimized?: boolean }) {
+export function DesignImagePreview({ id, imageUrl, name, eager = false, unoptimized = false }: { id: string; imageUrl: string; name: string; eager?: boolean; unoptimized?: boolean }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const pinchDistanceRef = useRef<number | null>(null);
   const zoomRef = useRef(1);
   const [zoom, setZoom] = useState(1);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [fullImageLoaded, setFullImageLoaded] = useState(false);
+  const [thumbnailFailed, setThumbnailFailed] = useState(false);
+  const thumbnailUrl = designThumbnailUrl(imageUrl);
+  const thumbnailSource = thumbnailFailed ? `/api/design-images/${id}` : thumbnailUrl;
 
   function touchDistance(touches: TouchEvent<HTMLDivElement>["touches"]) {
     const x = touches[0].clientX - touches[1].clientX;
@@ -60,20 +66,28 @@ export function DesignImagePreview({ id, name, eager = false, unoptimized = fals
 
   function closePreview() {
     dialogRef.current?.close();
+    setPreviewOpen(false);
     zoomRef.current = 1;
     setZoom(1);
     viewportRef.current?.scrollTo(0, 0);
   }
 
   function resetPreview() {
+    setPreviewOpen(false);
     zoomRef.current = 1;
     setZoom(1);
     viewportRef.current?.scrollTo(0, 0);
   }
 
+  function openPreview() {
+    setFullImageLoaded(false);
+    setPreviewOpen(true);
+    dialogRef.current?.showModal();
+  }
+
   return <>
-    <button className="design-image-link" type="button" onClick={() => dialogRef.current?.showModal()} aria-label={`Preview ${name}`}>
-      <Image src={`/api/design-images/${id}`} alt={name} fill sizes="(max-width: 700px) 50vw, (max-width: 1100px) 33vw, (max-width: 1400px) 25vw, 20vw" loading={eager ? "eager" : "lazy"} unoptimized={unoptimized} />
+    <button className="design-image-link" type="button" onClick={openPreview} aria-label={`Preview ${name}`}>
+      <Image src={thumbnailSource} alt={name} fill sizes="480px" loading={eager ? "eager" : "lazy"} unoptimized onError={() => setThumbnailFailed(true)} />
     </button>
     <dialog ref={dialogRef} className="design-preview-dialog" onClose={resetPreview}>
       <div className="design-preview-header">
@@ -87,7 +101,8 @@ export function DesignImagePreview({ id, name, eager = false, unoptimized = fals
       </div>
       <div ref={viewportRef} className="design-preview-viewport" onTouchStart={startPinch} onTouchMove={movePinch} onTouchEnd={endPinch} onTouchCancel={endPinch}>
         <div className="design-preview-canvas" style={{ width: `${zoom * 100}%`, height: `${zoom * 100}%` }}>
-          <Image src={`/api/design-images/${id}`} alt={name} fill sizes="100vw" unoptimized={unoptimized} />
+          <Image className="preview-thumbnail" src={thumbnailSource} alt="" fill sizes="480px" unoptimized aria-hidden="true" onError={() => setThumbnailFailed(true)} />
+          {previewOpen ? <Image className={`preview-full-image ${fullImageLoaded ? "loaded" : ""}`} src={`/api/design-images/${id}`} alt={name} fill sizes="100vw" unoptimized={unoptimized} onLoad={() => setFullImageLoaded(true)} /> : null}
         </div>
       </div>
     </dialog>

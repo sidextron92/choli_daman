@@ -6,7 +6,7 @@ Focused workshop-management application for designs, karigars and cloth pricing.
 
 - Supabase email/password authentication
 - Home dashboard and CSV exports
-- Design CRUD, client compression, ImageKit upload, categories, multi-cloth pricing, assignment, search, filters and sorting
+- Design CRUD, client compression, Supabase Storage originals, ImageKit listing thumbnails, categories, multi-cloth pricing, assignment, search, filters and sorting
 - Karigar CRUD, profiles, call/SMS links and automatic Open Design creation
 - Cloth Type CRUD with usage-aware deletion protection
 - WhatsApp preview and image download
@@ -27,7 +27,7 @@ The browser never receives a Supabase URL, anon key or service-role key. This is
 
 ## Local development
 
-1. Copy `.env.example` to `.env.local` and fill in the five variables.
+1. Copy `.env.example` to `.env.local` and fill in the four variables.
 2. Install dependencies: `npm install`
 3. Start development: `npm run dev`
 4. Open the displayed localhost URL and sign in with an existing Supabase Auth user.
@@ -48,7 +48,6 @@ npm run build
 | `SUPABASE_ANON_KEY` | Server-only | Auth session client |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only, sensitive | Authenticated data and Storage operations |
 | `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` | Server-only, sensitive | Stable Server Action encryption across deployments |
-| `IMAGEKIT_PRIVATE_KEY` | Server-only, sensitive | Design image upload and deletion through ImageKit |
 
 Do not create `NEXT_PUBLIC_` variants. Legacy local files containing `VITE_SUPABASE_ANON_KEY` are supported only to ease migration.
 

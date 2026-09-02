@@ -41,3 +41,13 @@ export function storageObjectPath(publicUrl: string) {
     return null;
   }
 }
+
+const IMAGEKIT_DESIGN_ENDPOINT = "https://ik.imagekit.io/cholidaman";
+const DESIGN_THUMBNAIL_TRANSFORMATION = "w-480,h-472,c-maintain_ratio_no_enlarge,fo-bottom,q-75,f-auto";
+
+export function designThumbnailUrl(publicUrl: string) {
+  const path = storageObjectPath(publicUrl);
+  if (!path) return publicUrl;
+  const encodedPath = path.split("/").map(encodeURIComponent).join("/");
+  return `${IMAGEKIT_DESIGN_ENDPOINT}/${encodedPath}?tr=${DESIGN_THUMBNAIL_TRANSFORMATION}`;
+}

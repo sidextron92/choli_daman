@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 60 * 60 * 24,
+    remotePatterns: [{ protocol: "https", hostname: "ik.imagekit.io", pathname: "/cholidaman/designs/**" }],
   },
 };
 

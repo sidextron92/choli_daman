@@ -79,6 +79,9 @@
 .design-preview-viewport{min-height:0;flex:1;overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y}
 .design-preview-canvas{position:relative;min-width:100%;min-height:100%;background:#050d19}
 .design-preview-canvas img{object-fit:contain;object-position:center center}
+.design-preview-canvas .preview-thumbnail{filter:blur(2px);transform:scale(1.01)}
+.design-preview-canvas .preview-full-image{opacity:0;transition:opacity .28s ease}
+.design-preview-canvas .preview-full-image.loaded{opacity:1}
 @media(max-width:600px){.filter-trigger{width:48px;min-width:48px;justify-content:center;gap:0}.design-create-dialog-header{padding:14px 16px}.design-create-dialog-body{padding:22px 16px 110px}.design-preview-dialog{width:100vw;height:100dvh;border-radius:0}.design-preview-header{min-height:58px;padding:10px}.design-preview-header>strong{font-size:13px}.design-preview-controls{gap:4px}.design-preview-controls button{width:34px;height:34px}}
 
 /* Denser mobile card copy gives the catalogue imagery more room. */

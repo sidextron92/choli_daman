@@ -6,7 +6,6 @@ import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { DESIGN_BUCKET, DESIGN_CATEGORIES, MAX_IMAGE_BYTES } from "@/lib/constants";
 import { storageObjectPath } from "@/lib/format";
-import { deleteImageKitFile, imageKitFileId, uploadDesignImage } from "@/lib/imagekit";
 import type { ActionState } from "@/lib/types";
 
 const baseSchema = z.object({
@@ -63,17 +62,15 @@ function validateImage(file: File, required: boolean): string | null {
 }
 
 async function uploadImage(file: File) {
-  return uploadDesignImage(file, `${crypto.randomUUID()}-${safeFileName(file.name)}`);
-}
-
-async function deleteStoredImage(url: string) {
-  const imageKitId = imageKitFileId(url);
-  if (imageKitId) {
-    await deleteImageKitFile(imageKitId);
-    return;
-  }
-  const path = storageObjectPath(url);
-  if (path) await createAdminClient().storage.from(DESIGN_BUCKET).remove([path]);
+  const supabase = createAdminClient();
+  const path = `designs/${crypto.randomUUID()}-${safeFileName(file.name)}`;
+  const { error } = await supabase.storage.from(DESIGN_BUCKET).upload(path, await file.arrayBuffer(), {
+    contentType: file.type,
+    cacheControl: "86400",
+  });
+  if (error) throw new Error(error.message);
+  const { data } = supabase.storage.from(DESIGN_BUCKET).getPublicUrl(path);
+  return { path, publicUrl: data.publicUrl };
 }
 
 export async function createDesignAction(
@@ -90,11 +87,11 @@ export async function createDesignAction(
   if (imageError) return { status: "error", message: imageError };
 
   const supabase = createAdminClient();
-  let uploadedFileId: string | null = null;
+  let uploadedPath: string | null = null;
   let designId: string | null = null;
   try {
     const upload = await uploadImage(file);
-    uploadedFileId = upload.fileId;
+    uploadedPath = upload.path;
     const { data: design, error } = await supabase
       .from("designs")
       .insert({
@@ -115,7 +112,7 @@ export async function createDesignAction(
     if (clothError) throw new Error(clothError.message);
   } catch (error) {
     if (designId) await supabase.from("designs").delete().eq("id", designId);
-    if (uploadedFileId) await deleteImageKitFile(uploadedFileId).catch(() => undefined);
+    if (uploadedPath) await supabase.storage.from(DESIGN_BUCKET).remove([uploadedPath]);
     return { status: "error", message: error instanceof Error ? error.message : "Design could not be created." };
   }
 
@@ -148,12 +145,12 @@ export async function updateDesignAction(
   ]);
   if (previousError || !previous || clothReadError) return { status: "error", message: "Design could not be loaded." };
 
-  let uploadedFileId: string | null = null;
+  let uploadedPath: string | null = null;
   try {
     let imageUrl = previous.image_url;
     if (hasFile && file instanceof File) {
       const upload = await uploadImage(file);
-      uploadedFileId = upload.fileId;
+      uploadedPath = upload.path;
       imageUrl = upload.publicUrl;
     }
 
@@ -172,14 +169,17 @@ export async function updateDesignAction(
     );
     if (insertError) throw new Error(insertError.message);
 
-    if (uploadedFileId) await deleteStoredImage(previous.image_url).catch(() => undefined);
+    if (uploadedPath) {
+      const oldPath = storageObjectPath(previous.image_url);
+      if (oldPath) await supabase.storage.from(DESIGN_BUCKET).remove([oldPath]);
+    }
   } catch (error) {
     await supabase.from("designs").update(previous).eq("id", id);
     await supabase.from("design_cloth_types").delete().eq("design_id", id);
     if (previousCloth?.length) {
       await supabase.from("design_cloth_types").insert(previousCloth.map((item) => ({ ...item, design_id: id })));
     }
-    if (uploadedFileId) await deleteImageKitFile(uploadedFileId).catch(() => undefined);
+    if (uploadedPath) await supabase.storage.from(DESIGN_BUCKET).remove([uploadedPath]);
     return { status: "error", message: error instanceof Error ? error.message : "Design could not be updated." };
   }
 
@@ -197,7 +197,8 @@ export async function deleteDesignAction(id: string): Promise<ActionState> {
   if (readError || !design) return { status: "error", message: "Design was not found." };
   const { error } = await supabase.from("designs").delete().eq("id", id);
   if (error) return { status: "error", message: error.message };
-  await deleteStoredImage(design.image_url).catch(() => undefined);
+  const path = storageObjectPath(design.image_url);
+  if (path) await supabase.storage.from(DESIGN_BUCKET).remove([path]);
   revalidatePath("/");
   revalidatePath("/designs");
   return { status: "success", message: "Design deleted." };
