@@ -160,6 +160,19 @@
 @media(max-width:820px){.skeleton-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
 @media(max-width:600px){.design-grid:not(.compact) .design-image{aspect-ratio:1.015}.skeleton-title{height:38px}.skeleton-toolbar{height:48px;margin-top:10px}.skeleton-image{aspect-ratio:1.015}.skeleton-copy{padding:9px}.pull-refresh-indicator{top:-2px}}
 
+/* Immediate skeletons for design CTA route transitions. */
+.skeleton-back-link{width:112px;height:18px;margin-bottom:10px;border-radius:7px}
+.detail-skeleton-grid{display:grid;grid-template-columns:minmax(0,650px) minmax(300px,420px);gap:24px;margin-top:12px;align-items:start}
+.detail-skeleton-primary,.detail-skeleton-secondary{min-height:420px}
+.skeleton-detail-image{min-height:360px;background:#d8e3f0}
+.detail-skeleton-copy{gap:14px;padding:22px}
+.detail-skeleton-copy span{height:18px}
+.detail-skeleton-copy span:nth-child(2){width:82%}
+.detail-skeleton-copy span:nth-child(3){width:66%}
+.detail-skeleton-secondary .detail-skeleton-copy span{height:42px;width:100%}
+@media(max-width:820px){.detail-skeleton-grid{grid-template-columns:1fr}.detail-skeleton-secondary{min-height:250px}.skeleton-detail-image{min-height:320px}}
+@media(max-width:600px){.detail-skeleton-grid{gap:14px}.detail-skeleton-primary{min-height:360px}.skeleton-detail-image{min-height:280px}.detail-skeleton-copy{padding:15px}.detail-skeleton-secondary{min-height:220px}}
+
 /* Global overflow containment and compact karigar deletion. */
 .app-shell,.main-column,.content{max-width:100%}
 .profile-danger-zone{min-height:0;padding:10px 12px;gap:12px}
@@ -172,3 +185,9 @@
 .share-preview .share-image img{object-fit:contain}
 .share-design-overlay{position:absolute;z-index:1;left:14px;top:14px;padding:7px 10px;border-radius:9px;color:#fff;background:rgba(15,38,68,.88);box-shadow:0 6px 18px rgba(0,0,0,.2);font-size:12px;font-weight:800;backdrop-filter:blur(8px)}
 .share-actions>.button{width:100%}
+.generated-share-image{display:grid;place-items:center;aspect-ratio:auto;min-height:420px}
+.generated-share-image img{position:static;width:100%;height:auto;max-height:72vh;display:block}
+.share-preview-loading{display:flex;align-items:center;gap:10px;color:#c9d7e8;font-size:12px}
+.share-preview-error{max-width:300px;margin:0;padding:20px;color:#ffd7dc;text-align:center}
+.share-actions .button[aria-disabled="true"]{pointer-events:none;opacity:.5}
+@media(max-width:600px){.generated-share-image{min-height:280px}.generated-share-image img{max-height:58vh}}
