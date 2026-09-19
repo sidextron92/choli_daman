@@ -34,19 +34,14 @@ function parseDesignForm(formData: FormData) {
     };
   }
 
-  const clothTypes = clothTypeIds.map((id) => ({
-    cloth_type_id: id,
-    sell_price: Number(formData.get(`price_${id}`)),
-  }));
-  if (clothTypes.some((item) => !Number.isFinite(item.sell_price) || item.sell_price < 0)) {
+  const clothTypes = clothTypeIds.map((id) => {
+    const raw = formData.get(`price_${id}`);
+    const value = raw === null || raw === "" ? 0 : Number(raw);
     return {
-      ok: false as const,
-      state: {
-        status: "error" as const,
-        message: "Every selected cloth type needs a valid non-negative sell price.",
-      },
+      cloth_type_id: id,
+      sell_price: Number.isFinite(value) && value >= 0 ? value : 0,
     };
-  }
+  });
   return { ok: true as const, data: parsed.data, clothTypes };
 }
 

@@ -108,7 +108,7 @@ export function DesignForm({ design, karigars, clothTypes, categories }: {
                 const current = design?.cloth_types.find((item) => item.cloth_type_id === cloth.id);
                 return <div className={`cloth-option ${active ? "selected" : ""}`} key={cloth.id}>
                   <label><input type="checkbox" name="cloth_type_ids" value={cloth.id} checked={active} onChange={(event) => setSelected((previous) => { const next = new Set(previous); if (event.target.checked) next.add(cloth.id); else next.delete(cloth.id); return next; })} /> <span>{cloth.name}</span></label>
-                  <input aria-label={`${cloth.name} sell price`} name={`price_${cloth.id}`} type="number" inputMode="decimal" min="0" step="0.01" placeholder="Sell ₹" defaultValue={current?.sell_price} disabled={!active} required={active} />
+                  {active && <input type="hidden" name={`price_${cloth.id}`} defaultValue={current?.sell_price ?? 0} />}
                 </div>;
               })}
             </div>
