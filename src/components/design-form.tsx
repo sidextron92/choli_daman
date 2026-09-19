@@ -1,13 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useActionState, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, Check, Images, X } from "lucide-react";
 import { createDesignAction, updateDesignAction } from "@/lib/actions/designs";
 import { DEFAULT_DESIGN_CATEGORY } from "@/lib/constants";
 import { INITIAL_ACTION_STATE, type ClothType, type Design, type Karigar } from "@/lib/types";
 import { FormMessage } from "@/components/form-message";
+import { useToast } from "@/components/toast-provider";
+import { DesignModalContext } from "@/components/create-design-modal";
 
 async function compressImage(file: File) {
   if (file.size <= 5 * 1024 * 1024 || !file.type.startsWith("image/")) return file;
@@ -29,6 +31,9 @@ export function DesignForm({ design, karigars, clothTypes, categories }: {
   categories: readonly string[];
 }) {
   const router = useRouter();
+  const showToast = useToast();
+  const modal = useContext(DesignModalContext);
+  const formRef = useRef<HTMLFormElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const clothDialogRef = useRef<HTMLDialogElement>(null);
@@ -39,7 +44,18 @@ export function DesignForm({ design, karigars, clothTypes, categories }: {
   const [processing, setProcessing] = useState(false);
   const [imageSource, setImageSource] = useState<"gallery" | "camera">("gallery");
 
-  useEffect(() => { if (state.status === "success") router.refresh(); }, [state.status, router]);
+  useEffect(() => {
+    if (state.status !== "success") return;
+    if (design) {
+      showToast("Design updated successfully.");
+      router.refresh();
+      return;
+    }
+    modal?.close();
+    showToast("Design created successfully.");
+    router.refresh();
+    router.push("/designs");
+  }, [state.status, router, design, modal, showToast]);
   useEffect(() => () => { if (preview.startsWith("blob:")) URL.revokeObjectURL(preview); }, [preview]);
 
   async function handleFile(file: File | undefined, input: HTMLInputElement | null, source: "gallery" | "camera") {
@@ -71,7 +87,7 @@ export function DesignForm({ design, karigars, clothTypes, categories }: {
   }
 
   return (
-    <form action={formAction} className="design-form">
+    <form ref={formRef} action={formAction} className="design-form">
       {design && <input type="hidden" name="id" value={design.id} />}
       <div className="image-field">
         {preview ? <div className="form-image"><Image src={preview} alt="Design preview" fill sizes="320px" unoptimized={preview.startsWith("blob:") || design?.design_type === "OPEN_DESIGN"} /></div> : <div className="image-placeholder"><Camera size={30} /><span>Add a design photograph</span><small className="hint image-upload-hint">Images over 5 MB are compressed before upload. Maximum 10 MB.</small></div>}
