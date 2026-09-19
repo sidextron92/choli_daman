@@ -109,7 +109,9 @@ export async function getDesigns(filters: DesignFilters): Promise<PaginatedDesig
 
   let query = supabase.from("designs_with_karigar").select("*", { count: "exact" });
   if (filters.category) query = query.eq("category", filters.category);
-  if (filters.karigarId) query = query.eq("karigar_id", filters.karigarId);
+  if (filters.karigarId) {
+    query = filters.karigarId === "unassigned" ? query.is("karigar_id", null) : query.eq("karigar_id", filters.karigarId);
+  }
   if (eligibleIds) query = query.in("id", eligibleIds);
 
   const sort = filters.sort ?? "newest";

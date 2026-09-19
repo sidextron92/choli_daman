@@ -197,8 +197,8 @@
 .share-preview-error{max-width:300px;margin:0;padding:20px;color:#ffd7dc;text-align:center}
 .share-actions .button[aria-disabled="true"]{pointer-events:none;opacity:.5}
 @media(max-width:600px){.generated-share-image{min-height:280px}.generated-share-image img{max-height:58vh}}
-.toast-container{position:fixed;right:18px;bottom:18px;z-index:100;display:grid;gap:10px;pointer-events:none}
-.toast{pointer-events:auto;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:#15498f;color:#fff;box-shadow:0 12px 40px rgba(11,35,66,.25);font-size:13px;font-weight:600;animation:toast-in .25s ease}
+.toast-container{position:fixed;right:18px;top:18px;z-index:100;display:grid;gap:10px;pointer-events:none}
+.toast{pointer-events:auto;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--green);color:#fff;box-shadow:0 12px 40px rgba(62,122,99,.25);font-size:13px;font-weight:600;animation:toast-in .25s ease}
 .toast.error{background:#a42334}
 .toast button{margin-left:6px;display:inline-grid;place-items:center;width:22px;height:22px;border:0;border-radius:6px;background:rgba(255,255,255,.18);color:#fff;cursor:pointer}
-@keyframes toast-in{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes toast-in{from{transform:translateY(-12px);opacity:0}to{transform:translateY(0);opacity:1}}
